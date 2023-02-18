@@ -60,6 +60,7 @@ app.listen(PORT, ()=> {
 })
 
 app.post('/web-data',async (req, res) => {
+  cosnole.log(req.body)
   const {queryId, products, totalPrice} = req.body
   try {
     await bot.answerWebAppQuery(queryId, {

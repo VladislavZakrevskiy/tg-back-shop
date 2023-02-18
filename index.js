@@ -1,9 +1,16 @@
 const token = '5998330146:AAHx-agp1PAkYJtHTZmijjsrhnOeMPWg0e4'
+const db = require('./db')
 var TelegramBot = require('node-telegram-bot-api');
+const multer = require('multer');
 const express = require('express')
 const cors = require('cors');
 const { json } = require('express');
-const wepAppUrl = 'https://master--ubiquitous-pony-af278a.netlify.app' 
+
+const wepAppUrl = 'https://master--ubiquitous-pony-af278a.netlify.app'
+
+const imageUpload = multer({
+  dest: 'images',
+});
 
 var bot = new TelegramBot(token, {polling: true});
 const app = express()
@@ -61,7 +68,6 @@ app.listen(PORT, ()=> {
 
 app.post('/web-data', async (req, res) => {
   const {queryId, products, totalPrice} = req.body
-  console.log(req.body)
   try {
     await bot.answerWebAppQuery(queryId, {
       type: 'article',
@@ -77,3 +83,34 @@ app.post('/web-data', async (req, res) => {
     res.status(500).json({})
   }
 })
+
+app.post('/images', imageUpload.single('image'), async (req, res) => {
+  const {id} = req.body
+  const { filename, mimetype, size } = req.file;
+  const filepath = req.file.path
+  db
+  .query('insert into image_files (filename, filepath, mimetype,size, prod_id) values ($1,$2,$3,$4, $5', [filename, filepath, mimetype, size, id])
+  .catch(e => {
+    console.log(e)
+  })
+})
+
+  app.put('/images', async (req, res) => {
+    const {id} = req.body
+    const images = db
+    .query('select * from image_files where prod_id = $1', [id])
+    .catch(e => {
+      console.log(e)
+    })
+    try {
+      if (images.rows[0]) {
+          const dirname = path.resolve();
+          const fullfilepath = path.join(dirname, images.rows[0].filepath);
+          return res.type(images.rows[0].mimetype).sendFile(fullfilepath);
+        }
+        return res.status(400).json({ success: false, message: 'not found'});
+      }
+      catch (error) {
+        res.status(404).json({ success: false, message: 'not found', stack: err.stack })    
+      }
+  })

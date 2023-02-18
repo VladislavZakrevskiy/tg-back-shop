@@ -18,6 +18,30 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
+
+bot.on('callback_query', msg=>{
+  var chatId = msg.message.chat.id;
+  if(msg.data == 'makeProd'){
+    bot.sendMessage(chatId, 'Перейдите по форме и пройдите 1 этап создания вашего неповторимого Знаменского бургера', {
+      reply_markup: {
+          inline_keyboard: [ 
+              [{text: 'Создание бургера 1 шаг', web_app: {url: wepAppUrl + '/makeBurg'}}]
+          ]
+      } 
+  })
+  .then(data => {
+        console.log(data)
+      }
+    )
+    return 0
+  }
+  if(msg.data == 'deleteProd'){
+    return 0
+  }
+  if(msg.data == 'employMen'){
+    return 0
+  }
+})
  
 bot.on('message', async (msg) =>  {
   var chatId = msg.chat.id;
@@ -43,14 +67,30 @@ bot.on('message', async (msg) =>  {
     })
     return 0
   }
+  if(text === '/adminRoots'){
+    await bot.sendMessage(chatId, 'Вы можете опробовать эти комманды:', {
+      reply_markup: {
+          inline_keyboard: [ 
+                [{text: 'Создание товара', callback_data: 'makeProd'}],
+                [{text: 'Удаление товара', callback_data: 'deleteProd'}],
+                [{text: 'Добавление сотрудника', callback_data: 'employMen'}]
+          ]  
+        }
+      }
+    )
+    return 0
+  }
   if(msg?.web_app_data?.data){
     try {
       const data = JSON.parse(msg?.web_app_data?.data)
       await bot.sendMessage(chatId, 'Спасибо за обратную связь!')
-      await bot.sendMessage(chatId, `Ваша страна: ${data?.country}`)
-      await bot.sendMessage(chatId, `Ваша улица: ${data?.street}`)
+      await bot.sendMessage(chatId, `Ваша фамилия: ${data?.last_name}`)
+      await bot.sendMessage(chatId, `Ваш столик: ${data?.table}`)
+      await bot.sendMessage(chatId, `Номер ресторана: ${data?.restourant}`)
+      await bot.sendMessage(chatId, `Страна: ${data?.country}`)
+      await bot.sendMessage(chatId, `Улица и дом: ${data?.street} д. ${data?.num_house}`)
       setTimeout(async ()=>{
-        await bot.sendMessage(chatId, `Все ваши данные, с любовью, КФС`)
+        await bot.sendMessage(chatId, `Ожидайте ваш заказ, с любовью, КФС`)
       }, 3000)
     } catch (error) {
       console.log(error)
@@ -59,6 +99,11 @@ bot.on('message', async (msg) =>  {
   }
   else bot.sendMessage(chatId, 'Я тебя не понимаю');
 });
+
+
+
+///////Потом перенесу это в отдельный файлик, now so lazy (todo)
+
 
 const PORT = 8000
 
@@ -88,7 +133,7 @@ app.post('/images', imageUpload.single('image'), async (req, res) => {
   const {id} = req.body
   const { filename, mimetype, size } = req.file;
   const filepath = req.file.path
-  db
+  await db
   .query('insert into image_files (filename, filepath, mimetype,size, prod_id) values ($1,$2,$3,$4, $5', [filename, filepath, mimetype, size, id])
   .catch(e => {
     console.log(e)
@@ -97,7 +142,7 @@ app.post('/images', imageUpload.single('image'), async (req, res) => {
 
   app.put('/images', async (req, res) => {
     const {id} = req.body
-    const images = db
+    const images = await db
     .query('select * from image_files where prod_id = $1', [id])
     .catch(e => {
       console.log(e)

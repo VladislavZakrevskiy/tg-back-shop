@@ -15,7 +15,8 @@ app.use(express.json())
 bot.on('message', async (msg) =>  {
   var chatId = msg.chat.id;
   const text = msg.text
-  if(text === '/start'){
+  let isKeyboard = false
+  if(text === '/menuKFC'){
     await bot.sendMessage(chatId, 'Ниже появится кнопка, заполни форму', {
         reply_markup: {
             inline_keyboard: [ 
@@ -23,9 +24,9 @@ bot.on('message', async (msg) =>  {
             ]
         }
     })
+    return 0
   }
-
-  if(text === '/start'){
+  if(text === '/formForInfo'){
     await bot.sendMessage(chatId, 'Ниже появится кнопка, заполни форму', {
         reply_markup: {
             keyboard: [
@@ -33,6 +34,7 @@ bot.on('message', async (msg) =>  {
             ]
         }
     })
+    return 0
   }
   if(msg?.web_app_data?.data){
     try {
@@ -46,13 +48,14 @@ bot.on('message', async (msg) =>  {
     } catch (error) {
       console.log(error)
     }
+    return 0
   }
   else bot.sendMessage(chatId, 'Я тебя не понимаю');
 });
 
 const PORT = 8000
 
-app.listen(()=> {
+app.listen(PORT, ()=> {
   console.log(`server started ${PORT}`)
 })
 
@@ -66,7 +69,7 @@ app.post('/web-data',async (req, res) => {
       input_message_content: {message_text: 'Поздравляю, вы совершили покупку на чек' + totalPrice + 'руб.'}
     })
     res.status(200).json({})
-  } catch (error) {
+  } catch (error) { 
     console.log(error)
     await bot.answerWebAppQuery(queryId, {
       type: 'article',

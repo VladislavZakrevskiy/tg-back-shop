@@ -59,25 +59,21 @@ app.listen(PORT, ()=> {
   console.log(`server started ${PORT}`)
 })
 
-app.post('/web-data',async (req, res) => {
-  cosnole.log(req.body)
+app.post('/web-data', async (req, res) => {
   const {queryId, products, totalPrice} = req.body
+  console.log(req.body)
   try {
     await bot.answerWebAppQuery(queryId, {
       type: 'article',
-      id: queryId, 
-      title: 'Успешная покупка ожидайте кассу',
-      input_message_content: {message_text: 'Поздравляю, вы совершили покупку на чек' + totalPrice + 'руб.'}
-    })
+      id: queryId,
+      title: 'Успешная покупка',
+      input_message_content: {
+          message_text: ` Поздравляю с покупкой, вы приобрели товар на сумму ${totalPrice}, ${products.map(item => item.title).join(', ')}`
+      }
+  })
     res.status(200).json({})
   } catch (error) { 
     console.log(error)
-    await bot.answerWebAppQuery(queryId, {
-      type: 'article',
-      id: queryId, 
-      title: 'Не удалось приобрести товар',
-      input_message_content: {message_text: 'Не удалось приобрести товар'}
-    })
     res.status(500).json({})
   }
 })
